@@ -1,0 +1,675 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بوابة زوار مكتبة جامعة جازان</title>
+    
+    <!-- تحميل Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- خطوط عربية -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- مكتبة QR Code -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <style>
+        :root {
+            --primary-color: #166534; /* لون أخضر داكن مشابه لشعار الجامعة */
+            --secondary-color: #34d399; /* لون أخضر فاتح للمميزات */
+            --bg-light: #f9fafb;
+            --text-dark: #1f2937;
+        }
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            direction: rtl; /* ضمان الاتجاه من اليمين لليسار */
+            text-align: right;
+        }
+        .header-bg {
+            background-color: var(--primary-color);
+            background-image: linear-gradient(135deg, #10b981 0%, var(--primary-color) 100%);
+        }
+        .btn-primary {
+            background-color: var(--secondary-color);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            background-color: #059669;
+            box-shadow: 0 10px 15px -3px rgba(52, 211, 153, 0.5), 0 4px 6px -2px rgba(52, 211, 153, 0.2);
+        }
+        .card {
+            background-color: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
+        }
+        .link-card {
+            background-color: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            transition: transform 0.2s;
+        }
+        .link-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgba(167, 243, 208, 0.3);
+        }
+        /* تصميم مخصص لرسائل التنبيهات */
+        .toast {
+            transition: opacity 0.5s, transform 0.5s;
+        }
+        /* تصميم مخصص لشعار الجامعة في الهيدر */
+        .header-logo {
+            width: 70px; /* تم زيادة الحجم قليلاً ليتناسب مع الشعار */
+            height: 70px; /* تم زيادة الحجم قليلاً ليتناسب مع الشعار */
+            object-fit: contain; /* لضمان ظهور الشعار كاملاً دون اقتصاص */
+            margin-left: 1rem;
+            background-color: white; /* خلفية بيضاء للشعار */
+            padding: 5px; /* بعض التبطين */
+            border-radius: 50%; /* لجعلها دائرية */
+        }
+        /* تصميم حقل إدخال الذكاء الاصطناعي */
+        #ai-response {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #e5e7eb;
+            background-color: #f9fafb;
+            padding: 1rem;
+            border-radius: 0.5rem;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- شريط الرأس مع الشعار والطقس ومعلومات المطور -->
+    <header class="header-bg p-6 text-white shadow-xl">
+        <div class="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center">
+            
+            <div class="mb-4 md:mb-0 flex items-center">
+                
+                <!-- شعار جامعة جازان (باستخدام رابط الصورة المرفقة) -->
+                <img src="https://storage.googleapis.com/assistive-images-3a81/uploaded:image_38bfe0.png-b260dd44-6b98-4d98-8fcb-6c163803b60b" alt="شعار جامعة جازان" class="header-logo">
+                <div>
+                    <h1 class="text-3xl font-bold mb-1">🏛️ بوابة زوار مكتبة كلية العلوم</h1>
+                    <p class="text-lg opacity-90">جامعة جازان | مرحباً بك أيها الزائر الكريم</p>
+                    
+                    <!-- اسم المطور -->
+                    <p class="text-sm mt-2 opacity-70">تنفيذ وتطوير / الأستاذ أحمد بوري</p>
+                </div>
+            </div>
+            
+            <!-- بطاقة الطقس -->
+            <div id="weather-card" class="bg-white/10 p-3 rounded-xl shadow-lg text-sm text-right min-w-[200px]">
+                <p class="font-bold text-xl">جازان</p>
+                <div class="flex justify-between items-center mt-1">
+                    <span class="text-4xl font-extrabold" id="current-temp">31°C</span>
+                    <div class="text-right">
+                        <p id="weather-desc" class="font-medium">مشمس</p>
+                        <p class="text-xs opacity-80" id="feels-like">تبدو: 36°C</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- القسم الأيمن: نموذج التسجيل والإحصائيات -->
+        <section class="lg:col-span-2 space-y-6">
+            
+            <!-- بطاقة تسجيل الزيارة -->
+            <div class="card p-6">
+                <h2 class="text-2xl font-bold mb-6 border-b pb-3 border-gray-200 text-green-700">✍️ تسجيل زيارة المكتبة</h2>
+                
+                <!-- نموذج التسجيل -->
+                <form id="checkin-form" class="space-y-4">
+                    
+                    <div>
+                        <label for="student-name" class="block text-sm font-medium text-gray-700 mb-1">اسم الطالب/الزائر:</label>
+                        <input type="text" id="student-name" name="student-name" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 text-gray-900" placeholder="أدخل اسمك الكامل">
+                    </div>
+                    
+                    <div>
+                        <label for="major" class="block text-sm font-medium text-gray-700 mb-1">التخصص / جهة الزيارة:</label>
+                        <select id="major" name="major" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 text-gray-900">
+                            <option value="" disabled selected>اختر تخصصك أو صفة الزيارة</option>
+                            
+                            <optgroup label="كلية العلوم">
+                                <option value="علوم الحاسب">علوم الحاسب</option>
+                                <option value="الرياضيات">الرياضيات</option>
+                                <option value="الفيزياء">الفيزياء</option>
+                                <option value="الكيمياء">الكيمياء</option>
+                                <option value="الأحياء">الأحياء</option>
+                            </optgroup>
+                            
+                            <optgroup label="كليات الهندسة">
+                                <option value="الهندسة المدنية">الهندسة المدنية</option>
+                                <option value="الهندسة الكهربائية">الهندسة الكهربائية</option>
+                                <option value="الهندسة الميكانيكية">الهندسة الميكانيكية</option>
+                                <option value="هندسة الحاسب الآلي">هندسة الحاسب الآلي</option>
+                            </optgroup>
+
+                            <optgroup label="الكليات الصحية">
+                                <option value="الطب البشري">الطب البشري</option>
+                                <option value="طب الأسنان">طب الأسنان</option>
+                                <option value="الصيدلة">الصيدلة</option>
+                                <option value="العلوم الطبية التطبيقية">العلوم الطبية التطبيقية</option>
+                                <option value="التمريض">التمريض</option>
+                            </optgroup>
+
+                            <optgroup label="زوار آخرون">
+                                <option value="زائر من داخل الجامعة (غير التخصصات المذكورة)">زائر من داخل الجامعة (غير التخصصات المذكورة)</option>
+                                <option value="زائر من خارج الجامعة">زائر من خارج الجامعة</option>
+                                <option value="موظف/عضو هيئة تدريس">موظف/عضو هيئة تدريس</option>
+                            </optgroup>
+                        </select>
+                    </div>
+
+                    <button type="submit" id="checkin-button" class="btn-primary w-full p-3 font-semibold text-white rounded-lg shadow-md hover:shadow-lg disabled:opacity-50" disabled>
+                        تسجيل الدخول للمكتبة (انتظار الاتصال...)
+                    </button>
+                </form>
+                
+                <!-- رسالة التنبيه/التأكيد -->
+                <div id="status-message" class="toast opacity-0 scale-95 mt-4 p-4 text-sm rounded-lg" role="alert"></div>
+
+                
+                <!-- قسم الباركود والرابط -->
+                <div class="mt-8 pt-6 border-t border-gray-200">
+                    <h3 class="text-xl font-bold mb-4 text-green-700">🔗 رابط الدخول (الباركود)</h3>
+                    
+                    <div id="qrcode-container" class="w-full max-w-[200px] p-2 bg-white border border-gray-300 rounded-lg mx-auto mb-4">
+                        <!-- مكان عرض QR Code -->
+                    </div>
+                    <p class="text-sm text-gray-600 break-words mb-2">
+                        <span class="font-semibold">رابط التسجيل الحالي:</span> <code id="current-url" class="select-all text-sm block text-gray-800 font-mono bg-gray-100 p-2 rounded"></code>
+                    </p>
+                    <button onclick="copyToClipboard('current-url')" class="bg-gray-200 text-gray-800 text-xs py-2 px-4 rounded-full hover:bg-gray-300 transition duration-150">
+                        نسخ الرابط
+                    </button>
+                    
+                    <p class="text-xs text-gray-500 mt-4">
+                        <span class="font-semibold">معرف الزائر الخاص بك (للاستدلال):</span> <code id="user-id">جارٍ التحميل...</code>
+                    </p>
+                </div>
+            </div>
+
+            
+            <!-- لوحة الإحصائيات الفورية وتصدير البيانات -->
+            <div id="analytics-dashboard" class="card p-6">
+                <h2 class="text-2xl font-bold mb-4 border-b pb-3 border-gray-200 text-green-700 flex items-center">
+                    📊 إحصائيات الزيارات الفورية
+                </h2>
+                <div class="space-y-4">
+                    
+                    <div class="bg-green-50 p-3 rounded-lg flex justify-between items-center border border-green-200">
+                        <span class="text-lg font-medium text-green-800">إجمالي عدد الزيارات:</span>
+                        <span id="total-visits-count" class="text-3xl font-extrabold text-green-900">...</span>
+                    </div>
+
+                    
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-700 mb-2">توزيع الزيارات حسب التخصص:</h3>
+                        <ul id="majors-list" class="bg-white p-3 rounded-lg border border-gray-200 divide-y divide-gray-100">
+                            <li class="text-gray-500">جاري تحميل البيانات...</li>
+                        </ul>
+                    </div>
+
+                    
+                    <button id="export-csv-button" class="w-full bg-gray-700 text-white p-3 rounded-lg font-semibold hover:bg-gray-800 transition duration-150 flex items-center justify-center disabled:opacity-50" disabled>
+                        <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        تصدير سجل الزيارات (CSV)
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- القسم الأيسر: الموارد والمساعد الذكي -->
+        <section class="lg:col-span-1 space-y-6">
+            
+            <!-- بطاقة المساعد البحثي (Gemini AI) -->
+            <div class="card p-6">
+                <h2 class="text-2xl font-bold mb-4 border-b pb-3 border-gray-200 text-green-700">✨ المساعد البحثي الذكي (Gemini AI)</h2>
+                
+                <form id="ai-form" class="space-y-3">
+                    <textarea id="ai-prompt" rows="3" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 text-gray-900" placeholder="اطلب اقتراحاً لموضوع بحث، أو اشرح مفهوماً علمياً..."></textarea>
+                    <button type="submit" id="ai-button" class="btn-primary w-full p-2 font-semibold text-white rounded-lg shadow-md hover:shadow-lg disabled:opacity-50">
+                        ابحث بواسطة الذكاء الاصطناعي
+                    </button>
+                </form>
+                
+                <div class="mt-4">
+                    <h3 class="font-semibold text-gray-700 mb-2">النتائج:</h3>
+                    <div id="ai-response" class="text-sm text-gray-800 min-h-[100px]">
+                        هنا ستظهر إجابات الذكاء الاصطناعي.
+                    </div>
+                </div>
+            </div>
+            
+            <!-- بطاقة موارد المعرفة -->
+            <div class="space-y-4">
+                <h2 class="text-2xl font-bold border-b pb-3 border-gray-200 text-green-700">📚 موارد المعرفة</h2>
+                
+                <a href="https://www.jazanu.edu.sa/" target="_blank" class="link-card block p-4 rounded-xl">
+                    <p class="text-lg font-bold text-green-800">🌐 بوابة جامعة جازان</p>
+                    <p class="text-sm text-green-600">الموقع الرسمي للجامعة</p>
+                </a>
+                
+                <a href="https://www.jazanu.edu.sa/ar/administration/departments/managing-knowledge-resources" target="_blank" class="link-card block p-4 rounded-xl">
+                    <p class="text-lg font-bold text-green-800">📖 إدارة مصادر المعرفة</p>
+                    <p class="text-sm text-green-600">بوابة المكتبات الرئيسية</p>
+                </a>
+                
+                <a href="https://sdl.edu.sa/" target="_blank" class="link-card block p-4 rounded-xl">
+                    <p class="text-lg font-bold text-green-800">💻 المكتبة الرقمية السعودية (SDL)</p>
+                    <p class="text-sm text-green-600">للوصول إلى الأبحاث والدوريات</p>
+                </a>
+                
+                <a href="https://www.jazanu.edu.sa/ar/administration/departments/managing-knowledge-resources/automaticsearchindex" target="_blank" class="link-card block p-4 rounded-xl">
+                    <p class="text-lg font-bold text-green-800">🔍 الفهرس الآلي للمكتبة</p>
+                    <p class="text-sm text-green-600">البحث عن الكتب والمصادر المادية</p>
+                </a>
+            </div>
+        </section>
+    </main>
+    
+    <!-- JavaScript ومنطق Firebase -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, serverTimestamp, setLogLevel, query, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // إعداد مستوى سجل Firebase إلى "تصحيح" لرؤية الأخطاء
+        setLogLevel('debug');
+        
+        // --- 1. الإعدادات الأساسية لـ Firebase ---
+        let db;
+        let auth;
+        let userId = 'غير معروف';
+        const APP_COLLECTION = 'library_visits';
+        const GEMINI_MODEL = 'gemini-2.5-flash-preview-09-2025';
+        const API_KEY = ""; // مفتاح API لـ Gemini
+
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        
+        const checkinButton = document.getElementById('checkin-button');
+        const exportButton = document.getElementById('export-csv-button');
+        const statusMessage = document.getElementById('status-message');
+        const userIdDisplay = document.getElementById('user-id');
+        const aiButton = document.getElementById('ai-button');
+        const aiResponseDiv = document.getElementById('ai-response');
+        
+        // دالة لعرض رسالة التوست (بدلاً من Alert)
+        const showToast = (message, isSuccess = true) => {
+            statusMessage.textContent = message;
+            statusMessage.classList.remove('opacity-0', 'scale-95', 'bg-red-100', 'text-red-700', 'bg-green-100', 'text-green-700');
+            
+            if (isSuccess) {
+                statusMessage.classList.add('bg-green-100', 'text-green-700');
+            } else {
+                statusMessage.classList.add('bg-red-100', 'text-red-700');
+            }
+            
+            statusMessage.classList.add('opacity-100', 'scale-100');
+            
+            setTimeout(() => {
+                statusMessage.classList.remove('opacity-100', 'scale-100');
+                statusMessage.classList.add('opacity-0', 'scale-95');
+            }, 5000);
+        };
+
+        // دالة إعداد مستمع الإحصائيات الفوري
+        function setupAnalyticsListener() {
+            if (!db) {
+                return;
+            }
+            
+            const visitsCollectionRef = collection(db, 'artifacts', appId, 'public', 'data', APP_COLLECTION);
+            const q = query(visitsCollectionRef);
+
+            onSnapshot(q, (snapshot) => {
+                let totalVisits = 0;
+                const majorCounts = {};
+
+                snapshot.forEach((doc) => {
+                    totalVisits++;
+                    const data = doc.data();
+                    const major = data.visitorMajor || 'غير محدد';
+                    
+                    majorCounts[major] = (majorCounts[major] || 0) + 1;
+                });
+
+                // تحديث واجهة المستخدم للإجمالي
+                document.getElementById('total-visits-count').textContent = totalVisits;
+                
+                // تحديث واجهة المستخدم للتخصصات
+                const majorsList = document.getElementById('majors-list');
+                majorsList.innerHTML = ''; 
+
+                const sortedMajors = Object.entries(majorCounts).sort(([, a], [, b]) => b - a);
+
+                if (sortedMajors.length === 0) {
+                    majorsList.innerHTML = '<li class="text-gray-500">لا توجد زيارات مسجلة بعد.</li>';
+                    return;
+                }
+
+                sortedMajors.forEach(([major, count]) => {
+                    const listItem = document.createElement('li');
+                    listItem.className = 'flex justify-between py-1 border-b border-gray-100 last:border-b-0';
+                    listItem.innerHTML = `
+                        <span class="text-gray-600">${major}</span>
+                        <span class="font-bold text-green-700">${count}</span>
+                    `;
+                    majorsList.appendChild(listItem);
+                });
+
+            }, (error) => {
+                console.error("خطأ في إعداد مستمع الإحصائيات:", error);
+                // showToast('فشل تحميل إحصائيات الزيارات.', false);
+                document.getElementById('majors-list').innerHTML = '<li class="text-red-500">فشل في تحميل الإحصائيات.</li>';
+            });
+        }
+
+
+        async function initializeFirebase() {
+            try {
+                if (Object.keys(firebaseConfig).length === 0) {
+                    checkinButton.textContent = '❌ فشل الاتصال (التهيئة).';
+                    return;
+                }
+
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                
+                if (auth.currentUser) {
+                    userId = auth.currentUser.uid;
+                    userIdDisplay.textContent = userId;
+                    checkinButton.disabled = false;
+                    exportButton.disabled = false;
+                    checkinButton.textContent = '✅ تسجيل دخول / زيارة';
+                    showToast('تم الاتصال بقاعدة البيانات بنجاح.');
+                    
+                    setupAnalyticsListener();
+                } else {
+                    userId = crypto.randomUUID();
+                    userIdDisplay.textContent = userId + ' (مجهول)';
+                    checkinButton.disabled = false;
+                    exportButton.disabled = false;
+                    checkinButton.textContent = '✅ تسجيل دخول / زيارة';
+                    showToast('تم الاتصال بشكل مجهول.');
+                    
+                    setupAnalyticsListener();
+                }
+            } catch (error) {
+                console.error("خطأ في تهيئة Firebase أو تسجيل الدخول:", error);
+                checkinButton.textContent = '❌ فشل الاتصال! (انظر السجل)';
+                showToast(`خطأ في الاتصال: ${error.message}`, false);
+            }
+        }
+
+        // --- 2. معالجة إرسال النموذج وحفظ البيانات في Firestore ---
+        document.getElementById('checkin-form').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            
+            if (!db || checkinButton.disabled) {
+                showToast('الرجاء الانتظار حتى يتم الاتصال بالنظام.', false);
+                return;
+            }
+
+            const name = document.getElementById('student-name').value.trim();
+            const major = document.getElementById('major').value.trim();
+            
+            if (name === '' || major === '' || major === 'اختر تخصصك أو صفة الزيارة') {
+                showToast('الرجاء تعبئة جميع الحقول المطلوبة واختيار التخصص/الصفة.', false);
+                return;
+            }
+
+            checkinButton.disabled = true;
+            checkinButton.textContent = 'جاري التسجيل... ⏳';
+
+            try {
+                const visitsCollectionRef = collection(db, 'artifacts', appId, 'public', 'data', APP_COLLECTION);
+                
+                await addDoc(visitsCollectionRef, {
+                    visitorName: name,
+                    visitorMajor: major,
+                    timestamp: serverTimestamp(), 
+                    checkInTime: new Date().toISOString(), 
+                    userId: userId,
+                    college: 'كلية العلوم', 
+                    library: 'مكتبة الكلية',
+                });
+
+                // رسالة الترحيب الشخصية المطلوبة
+                showToast(`➡️ 😊 مرحباً بك يا ${name}! سعدنا بزيارتك.`);
+                
+                document.getElementById('student-name').value = '';
+
+            } catch (e) {
+                console.error("خطأ في حفظ بيانات الزيارة: ", e);
+                showToast(`فشل التسجيل: ${e.message}`, false);
+            } finally {
+                checkinButton.disabled = false;
+                checkinButton.textContent = '✅ تسجيل دخول / زيارة';
+            }
+        });
+
+        // --- 3. تصدير البيانات إلى CSV ---
+        exportButton.addEventListener('click', async () => {
+            if (!db) {
+                showToast('الرجاء الانتظار حتى يتم الاتصال بقاعدة البيانات.', false);
+                return;
+            }
+            
+            exportButton.disabled = true;
+            exportButton.textContent = 'جاري التصدير... ⌛';
+
+            try {
+                const visitsCollectionRef = collection(db, 'artifacts', appId, 'public', 'data', APP_COLLECTION);
+                const querySnapshot = await getDocs(visitsCollectionRef);
+                
+                if (querySnapshot.empty) {
+                    showToast('لا توجد سجلات زيارة لتصديرها.', false);
+                    return;
+                }
+
+                let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; // \uFEFF لإضافة BOM ودعم ترميز UTF-8 في Excel
+                
+                // عناوين الأعمدة
+                const headers = ["الاسم", "التخصص", "التاريخ والوقت (خادم)", "معرف الزائر"];
+                csvContent += headers.join(",") + "\n";
+                
+                // إضافة البيانات
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    
+                    // تحويل timestamp إلى تنسيق مقروء
+                    let timestampStr = 'غير محدد';
+                    if (data.timestamp && data.timestamp.toDate) {
+                        timestampStr = data.timestamp.toDate().toLocaleString('ar-SA');
+                    } else if (data.checkInTime) {
+                        timestampStr = new Date(data.checkInTime).toLocaleString('ar-SA');
+                    }
+                    
+                    // تجهيز الصف
+                    const row = [
+                        `"${data.visitorName ? data.visitorName.replace(/"/g, '""') : ''}"`,
+                        `"${data.visitorMajor ? data.visitorMajor.replace(/"/g, '""') : ''}"`,
+                        `"${timestampStr}"`,
+                        `"${data.userId || ''}"`
+                    ];
+                    
+                    csvContent += row.join(",") + "\n";
+                });
+
+                // إنشاء الرابط وتنزيل الملف
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", `Jazan_Library_Visits_${new Date().toISOString().slice(0, 10)}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                showToast('تم تصدير البيانات بنجاح!');
+
+            } catch (error) {
+                console.error("خطأ في تصدير البيانات:", error);
+                showToast(`فشل التصدير: ${error.message}`, false);
+            } finally {
+                exportButton.disabled = false;
+                exportButton.textContent = 'تصدير سجل الزيارات (CSV)';
+            }
+        });
+
+        // --- 4. دمج المساعد البحثي (Gemini AI) ---
+        document.getElementById('ai-form').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            
+            const prompt = document.getElementById('ai-prompt').value.trim();
+            if (!prompt) return;
+
+            aiButton.disabled = true;
+            aiButton.textContent = 'جاري البحث... 🧠';
+            aiResponseDiv.innerHTML = '<p class="text-center text-gray-500">جاري التواصل مع الخبراء... (قد يستغرق الأمر بعض الوقت)</p>';
+            
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${API_KEY}`;
+            const systemPrompt = "Act as an expert research assistant at Jazan University Library. Provide concise, high-quality, and well-structured answers in Arabic based on the user's research query. Use Google Search to ground the response.";
+            const userQuery = prompt;
+
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                tools: [{ "google_search": {} }],
+                systemInstruction: {
+                    parts: [{ text: systemPrompt }]
+                },
+            };
+
+            let responseText = '';
+            let sources = [];
+            const MAX_RETRIES = 5;
+            let delay = 1000;
+
+            for (let i = 0; i < MAX_RETRIES; i++) {
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    const candidate = result.candidates?.[0];
+
+                    if (candidate && candidate.content?.parts?.[0]?.text) {
+                        responseText = candidate.content.parts[0].text;
+                        
+                        const groundingMetadata = candidate.groundingMetadata;
+                        if (groundingMetadata && groundingMetadata.groundingAttributions) {
+                            sources = groundingMetadata.groundingAttributions
+                                .map(attribution => ({
+                                    uri: attribution.web?.uri,
+                                    title: attribution.web?.title,
+                                }))
+                                .filter(source => source.uri && source.title);
+                        }
+                        break; // Success, break the retry loop
+
+                    } else {
+                        throw new Error("No valid response from LLM.");
+                    }
+                } catch (error) {
+                    console.error(`Attempt ${i + 1} failed:`, error);
+                    if (i < MAX_RETRIES - 1) {
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        delay *= 2; // Exponential backoff
+                    } else {
+                        responseText = 'عذراً، حدث خطأ في الاتصال بالمساعد البحثي. الرجاء المحاولة لاحقاً.';
+                    }
+                }
+            }
+
+
+            // عرض النتائج
+            aiResponseDiv.innerHTML = responseText.replace(/\n/g, '<br>');
+
+            if (sources.length > 0) {
+                let sourcesHtml = '<div class="mt-4 pt-3 border-t border-gray-300"><h4 class="font-semibold text-green-700">المصادر المستخدمة:</h4><ul class="list-disc pr-5 mt-2 space-y-1 text-xs">';
+                sources.forEach((source, index) => {
+                    sourcesHtml += `<li><a href="${source.uri}" target="_blank" class="text-blue-600 hover:text-blue-800">${source.title || 'رابط خارجي'}</a></li>`;
+                });
+                sourcesHtml += '</ul></div>';
+                aiResponseDiv.innerHTML += sourcesHtml;
+            }
+
+            aiButton.disabled = false;
+            aiButton.textContent = 'ابحث بواسطة الذكاء الاصطناعي';
+        });
+
+        // --- 5. وظائف مساعدة عامة ---
+        
+        // عرض الرابط ورمز QR
+        const currentUrl = window.location.href;
+        document.getElementById('current-url').textContent = currentUrl;
+        
+        // جلب قيمة اللون الأساسي من CSS لرمز QR
+        const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim(); 
+
+        new QRCode(document.getElementById("qrcode-container"), {
+            text: currentUrl,
+            width: 190,
+            height: 190,
+            colorDark: primaryColor,
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
+
+        // عرض الطقس الحالي (ثابت)
+        const weatherData = {
+            temperature: "31°C",
+            feels_like: "36°C",
+            condition: "مشمس"
+        };
+        document.getElementById('current-temp').textContent = weatherData.temperature;
+        document.getElementById('feels-like').textContent = `تبدو: ${weatherData.feels_like}`;
+        document.getElementById('weather-desc').textContent = weatherData.condition;
+
+        // دالة نسخ الرابط إلى الحافظة
+        window.copyToClipboard = (elementId) => {
+            const textToCopy = document.getElementById(elementId).textContent;
+            
+            const textarea = document.createElement('textarea');
+            textarea.value = textToCopy;
+            document.body.appendChild(textarea);
+            textarea.select();
+            
+            try {
+                document.execCommand('copy');
+                showToast('تم نسخ الرابط بنجاح!');
+            } catch (err) {
+                console.error('فشل النسخ إلى الحافظة: ', err);
+                showToast('فشل النسخ. الرجاء النسخ يدوياً.', false);
+            }
+            document.body.removeChild(textarea);
+        };
+
+        // البدء بتهيئة Firebase عند تحميل الصفحة
+        initializeFirebase();
+
+    </script>
+</body>
+
+</html>
